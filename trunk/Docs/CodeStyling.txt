@@ -1,0 +1,39 @@
+/// DRAFT VERSION \\\
+
+                  		CODE STYLING RULES
+		                               v0.1
+                				by Artem Shpynov		
+
+1. Goals
+
+This document contain codestyling rules to keep New Age Contact list project mainanable.. etc.
+
+2. Naming convention.
+2.1. Multiword names should be EachWordCapitalized style
+2.2. All classes name should start from capital letter 
+2.3. All pointers name should have 'p' refix (e.g. void * pFoo)
+2.4. All class memebers should have 'm_' prefix (e.g. void * m_pFoo).
+2.5. Type names under typedef should be all capitalized.
+....
+
+3. Code formatting
+3.1. Use spaces instead of Tab.
+3.2. Open bracets '{' should be placed on new line under open construction, block should be idented for 4 space to right.
+3.3. Close brackets '}' should be aligned with appropriate open brackets '{'.
+3.4. After Close bracket new line shoud be inserted, except in case of '} while (...);' constructions.
+3.5. It preferable to bracketing 'if' blocks  even in case of single instruction.
+3.6. Empty line should be before each 'if', 'switch', 'do', 'while' except of 'else if'
+
+4. Guides
+4.1. Code should be easy-to-reading. This mean: try to made you code as easy to understand as possible. e.g.
+
+  a+=m+b;
+it is better to:
+  a+=(m+b);
+
+4.2. Using of modifying operators like (=, +=, ++, etc)  inside 'if' expressions is prohibided, same for postfix and prefixes operators.
+4.3. Try to use rule - single procedure - single 'return'. 
+4.4. It prefferable to use enum or const instead of defines in order to have types verification. Also avoid to use 'magic numbers'
+
+
+... to be continued

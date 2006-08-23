@@ -1,0 +1,135 @@
+1. PLUGIN DECOMPOSITION
+
+ User interface basic (Main window):
+ - MAIN WINDOW module
+ - FRAME MANAGER module
+ - MENU module
+ - TRAY module
+ - HOTKEY module
+
+ Contact list control basic:
+ - CONTACT LIST CONTROL module
+ - LIST OF CONTACTS (tree) module
+ - RENDER CONTACT LIST module
+ - EXTRA ICONS module
+
+ Common data (can be used by several instances of contact list controls, other modules):
+ - CONTACTS CACHE module (plain list)
+ - PROTOCOL module (list of protocos, order, etc.)
+ 
+ Additional frames: 
+ - STATUS BAR module
+ - BUTTONS BAR module
+
+ Skining feature:
+ - SKIN DATA STORAGE MODULE
+ - RENDER OBJECTS module (separate mode: GDI, DX3D)
+
+2. Conception
+Major features
+1. Contact list module should support older contact list services, it is best to realize all of them
+2. Required metacontacts support.
+3. Animated (or flashed icon) user event notification. Raising it to top of parent group if it is collapsed.
+4. Custom icon per-group???
+5. Able to hide protocol, its order customization for tray, menu and status bar.
+6. 4 modes to show tray icons if more then 1 proto: one of proto, global (most online status),  cycle and multicons. Option to use single icon mode if statuses are same.
+7. Name indexed extra icons slots, possibility to join several icons in one slot (prioritized).
+8. Table-like based row items placement customization. Default one should be embedded.
+9. All icons should be stored in internal imagelist object only if they are not customized via iconlib module. This is for statuses icons too ????.
+10. The should be next row items:
+* Avatar
+* status icon  (can be shown as overlay under avatar)
+* main line  (can be customizing nick, custom text, etc)
+* 2 additional line (can be customized as status text, message, xstatus, custom (variabled) text, or contact time).
+* contact time
+* extra slots. User defined number of extra slot. Can be customized to join several extras here.
+11. For ICQ protocol it is need to support additional status icon modes:
+* joined icon: xStatus is main and normal status as overlay. Or 
+* both icons
+* xStatus if it set and normal status if no.
+12.  Option to show additional lines only for currently selected contact.... (may be 2 table placement templates one for selected and one for other).
+13. Multi selection mode for contact (Shift+click, Ctrl+click support).  
+14.  Wrapped text for long lines with maximum height limitation.
+15.  The extra slot should be clickable and hinted. If multi icon in slot hint should contain info from int
+Skin
+1. Contact list should support Skin mechanism, probably in several modes: DX3D, Layered and Light (plain api).
+2. Skin should be stored in external files and should be loaded from file and do not stored in db.
+3. Skins can be several complexities:
+* Classical: Native window look, only basic color values customization + background image customization (clist_classic like)
+* Nicer: Native window look, window is region shaped, nicer skin engine. (clist_nicer)
+* Advanced: Non-Layered window look, window is region shaped, modern skin engine (like clist_modern in non-layered mode). 
+* Layered: Layered window look, modern skin engine (clist_modern).
+4. I suggest to store skinnable setting in separate structure and form it in next way:
+Default values -> Base Skin file data -> User stored customization of skin -> Database settings customization.
+This mean that value data will be taken firstly from DB, if absent,  then from user custom stored skin, then from Base loaded skin, and if nothing previous - default value will be used.
+5. Skin description files will be consisting from 3 parts. 
+* Object customization - main part of skin should be always - contain data about objects
+* Template - Template will determine the objects are able to be customized. One template will be embedded for nicer like customization, and another one for Classic look customization. Advanced skins should use one of they or skin defined.
+* User skin customization - the changes that user prefer to change in basic skin. This file should not be included for skin redistribution pack.
+
+
+
+3. Code Design
+3.1. Cache System
+The reason to implement cache system is speedup services like get contact name etc. Cache is the sorted list cacheList of elements cacheItem. Each cacheItem represents single contact. The chacheItem class contains uniq field HCITEM (unsigned int) Handle wich should be used by class cacheList to sort list of itema and quick (as fast as possible) access to item.
+
+Work with cacheItem list should be thread safe. So I suppose to have next routines:
+
+cacheItem * cacheList::getEntry(HCITEM) - returns pointer to existed cacheItem object in list with handle HCITEM. Got object should NOT be deleted in caller. (cacheList is response for deleting). It is not thread safed (data can be changed in runtime after returning).
+
+cacheItem * cacheList::copyEntry(HCITEM,[flags]) - returns pointer to NEW cacheItem object, each field of new object are equal to same fields of found object in list. String fields should be COPIED. The caller is responsible for new object deleleting. Probable it is take sense to have flags field that points wich fields should be copied.
+
+int cacheList::setEntry(HCITEM, cacheItem,[flags]) - the data from cacheItem should be copied to cache item in list. [flags] points which fields are valid. String fields should be COPIED. If item is absent in list it should be added only if all field are valid (flags are all set).
+
+setEntry and copyEntry is required to gurantee item modification transaction. During it working - the list/item modification from other thread should be prohibited via Critical section entering.
+
+The list can be Locked/Unlocked via methods cacheList::lock, cacheList::unlock. This methods should be used only from outside of class. And should logs its calling  if DEBUG is defined.
+
+I guess that cacheItem object should contain next fields:
+{
+...
+      HCITEM Handle;
+      TCHAR * tcName;
+      TCHAR * tcProtocol;		// protocol is pointed to global static string from outside and
+ 					// should not be  deleted or copied. Only pointer value.
+      int nStatus;
+...
+}
+
+Also there can be other fields. But hope that this will not be strings.
+
+
+3.2 List of Row Items
+This list is used to represent contacts/groups/metacontacts/other item in contact list control (CLC) - each line in list.
+Each CLC have its own row items list.
+This list (lets call it rowItemList) contains objects rowItem. rowItem is parent class for rowItemGroup, rowItemContact, rowItemMeta, rowItemInfo and rowItemDevider.
+rowItemGroup (and rowItemMeta) can have childs items. 
+List of row item should be like TREE: groups can contain subgroups and contacts, metha can contain child contacts.
+It will be good if child item will know the parent item.
+Item in such list can be indexed via unique Handle field (groups too).
+
+Work object for this list should be similar to CacheSystem.
+
+But this can have much more text fields: tcName, tcProtocol, tcSecondLineText, tcThirdLineText, tsStatusMsg, etc.... Most probably that tcName, tcSecondLineText, tcThirdLineText will be not simple string but collections of (substings,smiley indexes ...) but in any case it should be copied full content not only pointers.
+ 
+Here should be routines to getRowItem, copyRowItem, setRowItem, lock and unlock.
+
+In addition I suppose to add some modification to both lists: like last searched entry/item. This is pair of Handle/cachePointer. It should be set by search routines and reset by any routines that can modify the pointer to object like DeleteItem or similar.
+
+So the sequence of work with lists is the next:
+
+If simple (and fast) modification is needed.
+1. Lock the list modification by other thread.
+2. Get the list object pointer.
+3. Directly modify list object fields (or via object interface methods).
+4. Unlock the list modification by other thread.
+
+If more complex modification is required (several fields are changed and or long analyze is required):
+1. Get the copy of list item (if fields analyze needed) or create new one.
+2. Modify required fields.
+3. Set the list item
+4. DELETE created object.
+
+Probably it will be needed to have method to set items with out locking for batch modification/adding. (so addItem should enter critical, add item, leave critical, but addItemUnsafe should just add item, locking is caller responsible). Same for deleteItem and deleteItemUnsafe.
+
+

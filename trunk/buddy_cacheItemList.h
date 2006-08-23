@@ -56,17 +56,17 @@ public:
 	~cacheItemList(void);
 
 public:
-	inline void lock();							// enter critical section to lock list modification
-	inline void unlock();							// leave critical section to unlock list modification
+	inline void lock();						// enter critical section to lock list modification
+	inline void unlock();					// leave critical section to unlock list modification
 	
 	HRESULT addItem(cacheItem *pItem);		// adding copy of item to list, if pItem->hItem 
 											// exist already - it will be modified
 											// pItem->hItem should be valid
 	
-	HRESULT setItem(cacheItem *pItem,			// modify the existed item with handle equal to pItem->hItem 
-				 COPYFLAG copyflag = COPY,  // if it is not present 
-				 ADDFLAG  addflag = ADD);   // it will be added (add flag), if copy is true - existed item will be 																			
-											// replaced (pItem object should NOT be deleted outside)
+	HRESULT setItem(cacheItem *pItem,		    // modify the existed item with handle equal to pItem->hItem 
+				    COPYFLAG copyflag = COPY,   // if it is not present 
+				    ADDFLAG  addflag = ADD);    // it will be added (add flag), if copy is true - existed item will be 																			
+											    // replaced (pItem object should NOT be deleted outside)
 											
 	
 	cacheItem *findItem(HCITEM hItem);		// return pointer to existed item with hItem (Thread UNSAFE) 
