@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual Studio 2005
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "buddy", "buddy.vcproj", "{9D0BF87C-DE64-4E3F-A29C-8D7708C30E68}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "buddy", "buddy_8.vcproj", "{9D0BF87C-DE64-4E3F-A29C-8D7708C30E68}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
